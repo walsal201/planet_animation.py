@@ -6,67 +6,120 @@ canvas_html = """
 <html>
 <head>
   <style>
-    body { margin: 0; overflow: hidden; }
-    canvas { display: block; }
+    body {
+      margin: 0;
+      overflow: hidden;
+      background: radial-gradient(#000010, #000000);
+      font-family: 'Segoe UI', sans-serif;
+    }
+    canvas {
+      display: block;
+      position: absolute;
+      top: 0;
+      left: 0;
+      z-index: 0;
+    }
+    .overlay {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      z-index: 1;
+      text-align: center;
+      color: #ffffff;
+      font-size: 3em;
+      font-weight: bold;
+      text-shadow: 0 0 20px #00ffff, 0 0 40px #ff00ff;
+      animation: pulse 4s infinite;
+    }
+    @keyframes pulse {
+      0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
+      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+    }
   </style>
 </head>
 <body>
+  <div class="overlay">Welcome to Walid Sphere 🌌</div>
   <canvas id="canvas"></canvas>
   <script>
-    var canvas = document.getElementById('canvas');
-    var ctx = canvas.getContext('2d');
+    const canvas = document.getElementById('canvas');
+    const ctx = canvas.getContext('2d');
     canvas.width = window.innerWidth;
     canvas.height = window.innerHeight;
+
     window.addEventListener('resize', () => {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
     });
 
-    var centerX = canvas.width / 2;
-    var centerY = canvas.height / 2;
-    var radius = Math.min(canvas.width, canvas.height) / 3;
+    let centerX = canvas.width / 2;
+    let centerY = canvas.height / 2;
+    let radius = Math.min(canvas.width, canvas.height) / 3;
 
-    var points = [];
-    var numPoints = 500;
-    for (var i = 0; i < numPoints; i++) {
-        var phi = Math.acos(2 * Math.random() - 1);
-        var theta = Math.random() * 2 * Math.PI;
-        points.push({ phi, theta });
+    let points = [];
+    const numPoints = 600;
+    for (let i = 0; i < numPoints; i++) {
+      let phi = Math.acos(2 * Math.random() - 1);
+      let theta = Math.random() * 2 * Math.PI;
+      points.push({ phi, theta });
     }
 
-    var angleX = 0;
-    var angleY = 0;
+    let angleX = 0;
+    let angleY = 0;
 
     function draw() {
-        ctx.clearRect(0, 0, canvas.width, canvas.height);
-        points.forEach(point => {
-            var x = radius * Math.sin(point.phi) * Math.cos(point.theta);
-            var y = radius * Math.sin(point.phi) * Math.sin(point.theta);
-            var z = radius * Math.cos(point.phi);
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      centerX = canvas.width / 2;
+      centerY = canvas.height / 2;
+      radius = Math.min(canvas.width, canvas.height) / 3;
 
-            var tempY = y * Math.cos(angleX) - z * Math.sin(angleX);
-            var tempZ = y * Math.sin(angleX) + z * Math.cos(angleX);
-            y = tempY;
-            z = tempZ;
+      const time = Date.now() * 0.002;
 
-            var tempX = x * Math.cos(angleY) + z * Math.sin(angleY);
-            z = -x * Math.sin(angleY) + z * Math.cos(angleY);
-            x = tempX;
+      points.forEach(point => {
+        let x = radius * Math.sin(point.phi) * Math.cos(point.theta);
+        let y = radius * Math.sin(point.phi) * Math.sin(point.theta);
+        let z = radius * Math.cos(point.phi);
 
-            var perspective = 600 / (400 + z);
-            var screenX = centerX + x * perspective;
-            var screenY = centerY - y * perspective;
-            var size = 1 * perspective;
+        let tempY = y * Math.cos(angleX) - z * Math.sin(angleX);
+        let tempZ = y * Math.sin(angleX) + z * Math.cos(angleX);
+        y = tempY;
+        z = tempZ;
 
-            ctx.beginPath();
-            ctx.arc(screenX, screenY, size, 0, Math.PI * 2);
-            ctx.fillStyle = `hsl(${(point.theta / (2 * Math.PI)) * 360}, 100%, 25%, 1)`;
-            ctx.fill();
-        });
+        let tempX = x * Math.cos(angleY) + z * Math.sin(angleY);
+        z = -x * Math.sin(angleY) + z * Math.cos(angleY);
+        x = tempX;
 
-        angleX += 0.0025;
-        angleY += 0.0055;
-        requestAnimationFrame(draw);
+        let perspective = 600 / (400 + z);
+        let screenX = centerX + x * perspective;
+        let screenY = centerY - y * perspective;
+        let size = 1.5 * perspective;
+
+        let hue = ((point.theta / (2 * Math.PI)) * 360 + time) % 360;
+        let glow = Math.sin(time / 10 + point.phi * 5) * 0.5 + 0.5;
+
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, size * glow, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue}, 100%, ${40 + glow * 30}%, ${0.8 + glow * 0.2})`;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, size * 2.5 * glow, 0, Math.PI * 2);
+        ctx.strokeStyle = `hsla(${(hue + 60) % 360}, 100%, 70%, 0.1)`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        if (Math.random() < 0.01) {
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, size * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = `white`;
+          ctx.fill();
+        }
+      });
+
+      angleX += 0.0025;
+      angleY += 0.0055;
+      requestAnimationFrame(draw);
     }
 
     draw();
@@ -75,5 +128,4 @@ canvas_html = """
 </html>
 """
 
-# Embed the animation in Streamlit
-html(canvas_html, height=600, width=800)
+html(canvas_html, height=700, width=1000)
