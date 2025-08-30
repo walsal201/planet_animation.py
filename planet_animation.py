@@ -83,4 +83,56 @@ canvas_html = """
 
       const time = Date.now() * 0.002;
       const angleX = Math.sin(time / 2) * 0.3;
-      const angleY = Math.cos(time / 3) * 0.3
+      const angleY = Math.cos(time / 3) * 0.3;
+
+      points.forEach(point => {
+        let x = radius * Math.sin(point.phi) * Math.cos(point.theta);
+        let y = radius * Math.sin(point.phi) * Math.sin(point.theta);
+        let z = radius * Math.cos(point.phi);
+
+        let tempY = y * Math.cos(angleX) - z * Math.sin(angleX);
+        let tempZ = y * Math.sin(angleX) + z * Math.cos(angleX);
+        y = tempY;
+        z = tempZ;
+
+        let tempX = x * Math.cos(angleY) + z * Math.sin(angleY);
+        z = -x * Math.sin(angleY) + z * Math.cos(angleY);
+        x = tempX;
+
+        let perspective = 600 / (400 + z);
+        let screenX = centerX + x * perspective;
+        let screenY = centerY - y * perspective;
+        let size = 1.5 * perspective;
+
+        let hue = ((point.theta / (2 * Math.PI)) * 360 + time * 10) % 360;
+        let glow = Math.sin(time / 10 + point.phi * 5) * 0.5 + 0.5;
+
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, size * glow, 0, Math.PI * 2);
+        ctx.fillStyle = `hsla(${hue}, 100%, ${40 + glow * 30}%, ${0.8 + glow * 0.2})`;
+        ctx.fill();
+
+        ctx.beginPath();
+        ctx.arc(screenX, screenY, size * 2.5 * glow, 0, Math.PI * 2);
+        ctx.strokeStyle = `hsla(${(hue + 60) % 360}, 100%, 70%, 0.1)`;
+        ctx.lineWidth = 0.5;
+        ctx.stroke();
+
+        if (Math.random() < 0.01) {
+          ctx.beginPath();
+          ctx.arc(screenX, screenY, size * 0.5, 0, Math.PI * 2);
+          ctx.fillStyle = `white`;
+          ctx.fill();
+        }
+      });
+
+      requestAnimationFrame(draw);
+    }
+
+    draw();
+  </script>
+</body>
+</html>
+"""
+
+html(canvas_html, height=700, width=1000)
