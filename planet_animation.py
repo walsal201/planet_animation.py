@@ -9,7 +9,7 @@ canvas_html = """
     body {
       margin: 0;
       overflow: hidden;
-      background: radial-gradient(#000010, #000000);
+      background: radial-gradient(circle at center, #000010, #000000);
       font-family: 'Segoe UI', sans-serif;
     }
     canvas {
@@ -26,16 +26,20 @@ canvas_html = """
       transform: translate(-50%, -50%);
       z-index: 1;
       text-align: center;
-      color: #ffffff;
       font-size: 3em;
       font-weight: bold;
-      text-shadow: 0 0 20px #00ffff, 0 0 40px #ff00ff;
-      animation: pulse 4s infinite;
+      animation: colorShift 6s infinite alternate ease-in-out, pulse 4s infinite;
+    }
+    @keyframes colorShift {
+      0%   { color: #ff00ff; text-shadow: 0 0 20px #ff00ff; }
+      25%  { color: #00ffff; text-shadow: 0 0 20px #00ffff; }
+      50%  { color: #ffff00; text-shadow: 0 0 20px #ffff00; }
+      75%  { color: #ff6600; text-shadow: 0 0 20px #ff6600; }
+      100% { color: #00ff00; text-shadow: 0 0 20px #00ff00; }
     }
     @keyframes pulse {
-      0% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
-      50% { opacity: 0.7; transform: translate(-50%, -50%) scale(1.05); }
-      100% { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+      0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
+      50%      { transform: translate(-50%, -50%) scale(1.05); opacity: 0.8; }
     }
   </style>
 </head>
@@ -65,8 +69,8 @@ canvas_html = """
       points.push({ phi, theta });
     }
 
-    let angleX = 0;
-    let angleY = 0;
+    let baseAngleX = 0;
+    let baseAngleY = 0;
 
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
@@ -75,6 +79,8 @@ canvas_html = """
       radius = Math.min(canvas.width, canvas.height) / 3;
 
       const time = Date.now() * 0.002;
+      const angleX = Math.sin(time / 2) * 0.3; // See-saw effect
+      const angleY = Math.cos(time / 3) * 0.3;
 
       points.forEach(point => {
         let x = radius * Math.sin(point.phi) * Math.cos(point.theta);
@@ -95,7 +101,7 @@ canvas_html = """
         let screenY = centerY - y * perspective;
         let size = 1.5 * perspective;
 
-        let hue = ((point.theta / (2 * Math.PI)) * 360 + time) % 360;
+        let hue = ((point.theta / (2 * Math.PI)) * 360 + time * 10) % 360;
         let glow = Math.sin(time / 10 + point.phi * 5) * 0.5 + 0.5;
 
         ctx.beginPath();
@@ -117,8 +123,6 @@ canvas_html = """
         }
       });
 
-      angleX += 0.0025;
-      angleY += 0.0055;
       requestAnimationFrame(draw);
     }
 
