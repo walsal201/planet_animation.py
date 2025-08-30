@@ -11,6 +11,7 @@
   font-weight: bold;
   color: #ff6600; /* Change color */
   animation: upDown 2s infinite alternate;
+  font-style: italic;
 }
 
 @keyframes upDown {
