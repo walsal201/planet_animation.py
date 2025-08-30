@@ -27,8 +27,9 @@ canvas_html = """
       z-index: 1;
       text-align: center;
       font-size: 3em;
+      font-style: italic;
       font-weight: bold;
-      animation: colorShift 6s infinite alternate ease-in-out, pulse 4s infinite;
+      animation: colorShift 6s infinite alternate ease-in-out, pulse 4s infinite, seesaw 3s infinite ease-in-out;
     }
     @keyframes colorShift {
       0%   { color: #ff00ff; text-shadow: 0 0 20px #ff00ff; }
@@ -40,6 +41,11 @@ canvas_html = """
     @keyframes pulse {
       0%, 100% { transform: translate(-50%, -50%) scale(1); opacity: 1; }
       50%      { transform: translate(-50%, -50%) scale(1.05); opacity: 0.8; }
+    }
+    @keyframes seesaw {
+      0%   { transform: translate(-50%, -50%) rotate(-2deg); }
+      50%  { transform: translate(-50%, -50%) rotate(2deg); }
+      100% { transform: translate(-50%, -50%) rotate(-2deg); }
     }
   </style>
 </head>
@@ -69,9 +75,6 @@ canvas_html = """
       points.push({ phi, theta });
     }
 
-    let baseAngleX = 0;
-    let baseAngleY = 0;
-
     function draw() {
       ctx.clearRect(0, 0, canvas.width, canvas.height);
       centerX = canvas.width / 2;
@@ -79,57 +82,5 @@ canvas_html = """
       radius = Math.min(canvas.width, canvas.height) / 3;
 
       const time = Date.now() * 0.002;
-      const angleX = Math.sin(time / 2) * 0.3; // See-saw effect
-      const angleY = Math.cos(time / 3) * 0.3;
-
-      points.forEach(point => {
-        let x = radius * Math.sin(point.phi) * Math.cos(point.theta);
-        let y = radius * Math.sin(point.phi) * Math.sin(point.theta);
-        let z = radius * Math.cos(point.phi);
-
-        let tempY = y * Math.cos(angleX) - z * Math.sin(angleX);
-        let tempZ = y * Math.sin(angleX) + z * Math.cos(angleX);
-        y = tempY;
-        z = tempZ;
-
-        let tempX = x * Math.cos(angleY) + z * Math.sin(angleY);
-        z = -x * Math.sin(angleY) + z * Math.cos(angleY);
-        x = tempX;
-
-        let perspective = 600 / (400 + z);
-        let screenX = centerX + x * perspective;
-        let screenY = centerY - y * perspective;
-        let size = 1.5 * perspective;
-
-        let hue = ((point.theta / (2 * Math.PI)) * 360 + time * 10) % 360;
-        let glow = Math.sin(time / 10 + point.phi * 5) * 0.5 + 0.5;
-
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, size * glow, 0, Math.PI * 2);
-        ctx.fillStyle = `hsla(${hue}, 100%, ${40 + glow * 30}%, ${0.8 + glow * 0.2})`;
-        ctx.fill();
-
-        ctx.beginPath();
-        ctx.arc(screenX, screenY, size * 2.5 * glow, 0, Math.PI * 2);
-        ctx.strokeStyle = `hsla(${(hue + 60) % 360}, 100%, 70%, 0.1)`;
-        ctx.lineWidth = 0.5;
-        ctx.stroke();
-
-        if (Math.random() < 0.01) {
-          ctx.beginPath();
-          ctx.arc(screenX, screenY, size * 0.5, 0, Math.PI * 2);
-          ctx.fillStyle = `white`;
-          ctx.fill();
-        }
-      });
-
-      requestAnimationFrame(draw);
-    }
-
-    draw();
-  </script>
-</body>
-</html>
-"""
-
-html(canvas_html, height=700, width=1000)
+      const angleX = Math.sin(time / 2) * 0.3;
+      const angleY = Math.cos(time / 3) * 0.3
